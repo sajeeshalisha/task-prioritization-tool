@@ -1,0 +1,17 @@
+#!/bin/bash
+# Launches TaskBoard from its project folder, setting it up first if this is the first run.
+# Apps started from Finder get a minimal PATH, so add Homebrew's, where python3 may live.
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+cd "$(dirname "$0")/../../.." || exit 1
+
+if [ ! -x .venv/bin/python ]; then
+    log="$HOME/Library/Logs/TaskBoardSetup.log"
+    osascript -e 'display notification "Setting up TaskBoard for the first time. This takes a minute." with title "TaskBoard"'
+    if ! ./setup.sh >"$log" 2>&1; then
+        message=$(tail -n 3 "$log" | tr '"' "'" | tr '\n' ' ')
+        osascript -e "display dialog \"TaskBoard couldn't finish setting up: $message (Full log: $log)\" buttons {\"OK\"} with icon caution"
+        exit 1
+    fi
+fi
+
+exec .venv/bin/python -m taskboard
